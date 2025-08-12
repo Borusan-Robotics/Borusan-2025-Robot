@@ -1,0 +1,49 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "m1-1"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Seviye 4"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "m1-2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "BoruAl"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "m1-3"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
