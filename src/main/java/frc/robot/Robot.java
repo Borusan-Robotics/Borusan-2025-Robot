@@ -4,16 +4,12 @@
 
 package frc.robot;
 
-import java.util.Map;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -46,10 +42,6 @@ public class Robot extends TimedRobot {
    * initialization code.
    */
   public Robot() {
-    String limelightURL = "http://10.49.72.200:5801/stream.mjpg";
-    Shuffleboard.getTab("cam").add("limelihgt",limelightURL)
-    .withWidget(BuiltInWidgets.kCameraStream)
-    .withProperties(Map.of("Show Crosshair",true,"Show Controls",false));
     // Instantiate our RobotContainer. This will perform all our button bindings,
     // and put our
     // autonomous chooser on the dashboard.
@@ -109,6 +101,7 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during autonomous. */
   @Override
   public void autonomousPeriodic() {
+    
   }
 
   @Override
@@ -156,7 +149,7 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("tx pos", tx);
     SmartDashboard.getBoolean("tv", tv);  
     PIDController SagxPID = new PIDController(0.0300,0, 0);
-    PIDController SagyPID = new PIDController(0.0163, 0.0, 0);
+    PIDController SagyPID = new PIDController(0.0353, 0.0, 0);
     PIDController SolxPID = new PIDController(0.026,0, 0);
     PIDController SolyPID = new PIDController(0.0158, 0, 0);
     PIDController zPID = new PIDController(0.0255, 0.04, 0.0000535);    
@@ -196,7 +189,7 @@ public class Robot extends TimedRobot {
           double voltageCompensation =1.0;// nominalVoltage/batteryvoltage;          
           if(tv == true){
             robotMerkezliMi = true;
-            xSpeed = SagxPID.calculate(tx,0.105)* -voltageCompensation;
+            xSpeed = SagxPID.calculate(tx,-7.06)* -voltageCompensation;
             if(Math.abs(xSpeed) > 0.55){ 
               xSpeed = Math.copySign(0.55, xSpeed);
             }
@@ -204,7 +197,7 @@ public class Robot extends TimedRobot {
             System.out.println("X "+xSpeed);
 
 
-            ySpeed = SagyPID.calculate(ty, 0.2) * -voltageCompensation;
+            ySpeed = SagyPID.calculate(ty, 1.47) * -voltageCompensation;
             if(Math.abs(ySpeed) > 0.55){
               ySpeed = Math.copySign(0.55, ySpeed);
             } 

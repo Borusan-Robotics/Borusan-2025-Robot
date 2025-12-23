@@ -26,19 +26,19 @@ public class Tirmanma_Pos_Cmd extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    superstructure.TirmanmaPos(position);
+    superstructure.climbPos(position);
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    superstructure.TirmanmaStop();
+    superstructure.climbStop();
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-   if(superstructure.GetTirmanmaEncoder()>=(position-2) && superstructure.GetTirmanmaEncoder()<=(position+2)){
+   if(superstructure.getClimbEncoder()>=(position-2) && superstructure.getClimbEncoder()<=(position+2)){
     return true;}
     else{
       return false;

@@ -26,13 +26,13 @@ public class Asansor_Run_Cmd extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    superstructure.AsansorRun(speed);
+    superstructure.liftRun(speed);
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    superstructure.AsansorRun(0.0);
+    superstructure.liftRun(0.0);
   }
 
   // Returns true when the command should end.

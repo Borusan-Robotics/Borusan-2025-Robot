@@ -26,13 +26,13 @@ public class Tirmanma_Run_Cmd extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    superstructure.TirmanmaRun(speed);
+    superstructure.climbRun(speed);
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    superstructure.TirmanmaRun(0.0);
+    superstructure.climbRun(0.0);
   }
 
   // Returns true when the command should end.

@@ -26,7 +26,7 @@ public class Asansor_Pos_Cmd extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    superstructure.AsansorPos(position);
+    superstructure.liftPos(position);
   }
 
   // Called once the command ends or is interrupted.
@@ -37,7 +37,7 @@ public class Asansor_Pos_Cmd extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    if(superstructure.GetAsansorEncoder()>=(position-2) && superstructure.GetAsansorEncoder()<=(position+2)){
+    if(superstructure.getLiftEncoder()>=(position-2) && superstructure.getLiftEncoder()<=(position+2)){
     return true;}
     else{
       return false;

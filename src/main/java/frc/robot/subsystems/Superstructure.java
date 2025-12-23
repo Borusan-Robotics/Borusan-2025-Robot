@@ -11,7 +11,6 @@ import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
@@ -28,26 +27,24 @@ import frc.robot.LimelightHelpers;
 
 public class Superstructure extends SubsystemBase {
   /** Creates a new Superstructure. */
-  private SparkMax motorAsansor;
-  private SparkMax motorTirmanma;
+  private SparkMax motorLift;
+  private SparkMax motorClimb;
   private SparkMax motorIntake;
-  private SparkMaxConfig motorAsansorConfig;
-  private SparkMaxConfig motorTirmanmaConfig;
+  private SparkMaxConfig motorLiftConfig;
+  private SparkMaxConfig motorClimbConfig;
   private SparkMaxConfig motorIntakeConfig;
-  private SparkClosedLoopController closedLoopController;
-  private SparkClosedLoopController closedLoopController3;
-  private RelativeEncoder encoderAsansor;
-  private RelativeEncoder encoderTirmanma;
+  private RelativeEncoder encoderLift;
+  private RelativeEncoder encoderClimb;
   private DigitalInput sensorIntake;
-  private DigitalInput aciSwitch;
-  LimelightHelpers limelight;
-  double kG=0.010;
+  private DigitalInput angleSwitch;
+  public static final double kG = 0.0015; // Yerçekimi için besleme ileri
+  private Double lastTarget=null;
+  private static final double POSITION_DEADBAND = 1.5;
   
-
 
   public Superstructure() {
     sensorIntake=new DigitalInput(0);
-    aciSwitch=new DigitalInput(2);
+    angleSwitch=new DigitalInput(2);
     motorIntake=new SparkMax(23, MotorType.kBrushless);
     motorIntakeConfig= new SparkMaxConfig();
     motorIntakeConfig.idleMode(IdleMode.kBrake);
@@ -57,130 +54,92 @@ public class Superstructure extends SubsystemBase {
     CvSource outputStream= CameraServer.putVideo("cam", 640, 480);
 
 
-
-
     /////////////////////// ASANSÖR BAŞ  ///////////////////////////////////////////////
-    motorAsansor = new SparkMax(21, MotorType.kBrushless);
-    encoderAsansor = motorAsansor.getEncoder();
-    motorAsansorConfig = new SparkMaxConfig();
-    closedLoopController = motorAsansor.getClosedLoopController();
-    motorAsansorConfig.encoder
+    motorLift = new SparkMax(21, MotorType.kBrushless);
+    encoderLift = motorLift.getEncoder();
+    motorLiftConfig = new SparkMaxConfig();
+    motorLiftConfig.smartCurrentLimit(60);
+    motorLiftConfig.encoder
         .positionConversionFactor(1);
-    motorAsansorConfig.closedLoop
+    motorLiftConfig.closedLoop
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-        // Set PID values for position control. We don't need to pass a closed
-        // loop slot, as it will default to slot 0.
-        .p(1)
-        .i(0)
-        .d(0)
+        .p(0.40)  // Düşürüldü: Daha yumuşak yaklaşım
+        .i(0)  // Eklendi: Steady-state hatayı düzeltir
+        .d(0.032)  // Eklendi: Salınımı önler ve yumuşatır
         .outputRange(-1, 1);
-    motorAsansorConfig.closedLoop.maxMotion
-      // Set MAXMotion parameters for position control. We don't need to pass
-      // a closed loop slot, as it will <default to slot 0.
-      .maxVelocity(8000)
-      .maxAcceleration(8000)
-      .allowedClosedLoopError(1);
-     encoderAsansor.setPosition(0);
-    motorAsansor.configure(motorAsansorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    motorLiftConfig.closedLoop.maxMotion
+      .maxVelocity(8000 )  // Düşürüldü: Daha kontrollü
+      .maxAcceleration(6000)  // Düşürüldü: Daha yumuşak
+      .allowedClosedLoopError(2);  // Artırıldı: Daha toleranslı
+     encoderLift.setPosition(0);
+    motorLift.configure(motorLiftConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     /////////////////////// ASANSÖR BİTİŞ  ///////////////////////////////////////////////
 
-    
 
   ///////////////////////     TIRMANMA BAŞ    ////////////////////////
-
-    motorTirmanma=new SparkMax(22, MotorType.kBrushless);
-    
-    closedLoopController3=motorTirmanma.getClosedLoopController();
-    encoderTirmanma=motorTirmanma.getEncoder();
-
-  
-    motorTirmanmaConfig=new SparkMaxConfig();
-
-    motorTirmanmaConfig.encoder
-        .positionConversionFactor(1);
-        
-  
-    motorTirmanmaConfig.closedLoop
+    motorClimb=new SparkMax(22, MotorType.kBrushless);
+    encoderClimb=motorClimb.getEncoder();
+    motorClimbConfig=new SparkMaxConfig();
+    motorClimbConfig.encoder.positionConversionFactor(1);
+    motorClimbConfig.closedLoop
     .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
     .p(0.4)
     .i(0)
-    .d(0.0005
-    )
+    .d(0.0005)
     .outputRange(-1, 1);
 
-    motorTirmanmaConfig.closedLoop.maxMotion
-        .maxVelocity(2000)
-        .maxAcceleration(2500)
-        .allowedClosedLoopError(1);
+    motorClimbConfig.closedLoop.maxMotion
+      .maxVelocity(2000)
+      .maxAcceleration(2500)
+      .allowedClosedLoopError(1);
     
-    encoderTirmanma.setPosition(0);
-    motorTirmanma.configure(motorTirmanmaConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    encoderClimb.setPosition(0);
+    motorClimb.configure(motorClimbConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   ///////////////////////     TIRMANMA BİT    ////////////////////////
-
-
-    limelight=new LimelightHelpers();
-  }
-  public void setLimelihgtPipline(){
-    limelight.getCurrentPipelineIndex("pipline ");
-  } 
-  public boolean getLimeLihgitTargetValid(){
-    return limelight.getTV("limelight");
-  }
+    
   
-  public double getLimeLihgitTargetOffsetx(){
-    return limelight.getTX("tx");
+
   }
-  public  double getLimeLihgitTargetOffsety(){
-    return limelight.getTY("ty");
-  } 
+  public void setLimelightPipline(){LimelightHelpers.getCurrentPipelineIndex("pipline");} 
+  public boolean getLimeLightTargetValid(){return LimelightHelpers.getTV("limelight");}
+  public double getLimeLightTargetOffsetx(){return LimelightHelpers.getTX("tx");}
+  public double getLimeLightTargetOffsety(){return LimelightHelpers.getTY("ty");} 
+  public void liftPos(double pos) {
+    double feedforward = kG;
+    // Only update if target is far enough from the last one
+    if (lastTarget != null && Math.abs(pos - lastTarget) < POSITION_DEADBAND) {
+        return; // Skip reissuing nearly identical reference
+    }
+
+    lastTarget = pos; // remember this target
+
+    motorLift.getClosedLoopController().setReference(
+        pos,
+        ControlType.kMAXMotionPositionControl,
+        ClosedLoopSlot.kSlot0,
+        feedforward // feedforward
+    );
   
-  public void AsansorPos(double pos){
-    double feedforward=kG;
-    closedLoopController.setReference(pos, ControlType.kMAXMotionPositionControl,ClosedLoopSlot.kSlot0,feedforward);
-  }
-  public void AsansorRun(double spd){
-    motorAsansor.set(spd);
-  }
-  public double GetAsansorEncoder(){
-    return encoderAsansor.getPosition();
-  }
-  public void AsansorStop(){
-    motorAsansor.stopMotor();
-  }
+}
+  public void liftRun(double spd){motorLift.set(spd);}
+  public void liftStop(){motorLift.stopMotor();}
+  public double getLiftEncoder(){return encoderLift.getPosition();}
 
-  public boolean getAciSwitch(){
-    return aciSwitch.get();
-  }
-
-  public void TirmanmaPos(double pos){
-    closedLoopController3.setReference(pos, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
-  }
-  public void TirmanmaRun(double spd){
-    motorTirmanma.set(spd);
-  }
-  public void TirmanmaStop(){
-    motorTirmanma.stopMotor();
-  }
-  public double GetTirmanmaEncoder(){
-    return encoderTirmanma.getPosition();
-  }
-
-  public void IntakeRun(double spd){
-    motorIntake.set(spd);
-  }
-  public void IntakeStop(){
-    motorIntake.stopMotor();
-  }
-  public boolean getBoruSensor(){
-    return sensorIntake.get();
-  }
+  public boolean getAngleSwitch(){return angleSwitch.get();}
+  public void climbPos(double pos){motorClimb.getClosedLoopController().setReference(pos, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);}
+  public void climbRun(double spd){motorClimb.set(spd);}
+  public void climbStop(){motorClimb.stopMotor();}
+  public double getClimbEncoder(){return encoderClimb.getPosition();}
+  public void IntakeRun(double spd){motorIntake.set(spd);}
+  public void IntakeStop(){motorIntake.stopMotor();}
+  public boolean getObjectSensor(){return sensorIntake.get();}
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    SmartDashboard.putNumber("Asansor Pos", encoderAsansor.getPosition());
-    SmartDashboard.putNumber("Tirmanma Pos", encoderTirmanma.getPosition());
-    SmartDashboard.putBoolean("Boru Sensor", !getBoruSensor());
-    SmartDashboard.putBoolean("LimitSwitch",getAciSwitch());
+    SmartDashboard.putNumber("Asansor Pos", encoderLift.getPosition());
+    SmartDashboard.putNumber("Tirmanma Pos", encoderClimb.getPosition());
+    SmartDashboard.putBoolean("Boru Sensor", !getObjectSensor());
+    SmartDashboard.putBoolean("LimitSwitch",getAngleSwitch());
   }
 }
